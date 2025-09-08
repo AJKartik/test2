@@ -36,6 +36,55 @@ def main():
 if __name__ == "__main__":
     main()
 
+# create_iac_vuln_file.py
+def create_iac_file():
+    iac_code = """
+    provider "aws" {
+      region = "us-east-1"
+    }
+    resource "aws_s3_bucket" "bad_bucket" {
+      bucket = "my-public-bucket-example"
+      acl    = "public-read"  # :x: Public access
+      versioning {
+        enabled = false  # :x: No versioning
+      }
+      server_side_encryption_configuration {
+        rule {
+          apply_server_side_encryption_by_default {
+            sse_algorithm = "AES256"
+          }
+        }
+      }
+    }
+    resource "aws_security_group" "open_sg" {
+      name        = "open_sg"
+      description = "Allow all traffic"
+      vpc_id      = "vpc-abc123"
+      ingress {
+        from_port   = 0
+        to_port     = 0
+        protocol    = "-1"
+        cidr_blocks = ["0.0.0.0/0"]  # :x: Open to all IPs
+      }
+      egress {
+        from_port   = 0
+        to_port     = 0
+        protocol    = "-1"
+        cidr_blocks = ["0.0.0.0/0"]
+      }
+    }
+    """
+    with open("main.tf", "w") as f:
+        f.write(iac_code)
+        print(":white_check_mark: 'main.tf' file with IaC misconfigurations created.")
+if __name__ == "__main__":
+    create_iac_file()
+
+
+
+
+
+
 
 
 
